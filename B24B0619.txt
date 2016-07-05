@@ -1,0 +1,614 @@
+      **************************                                        00010001
+       IDENTIFICATION DIVISION.                                         00020001
+      **************************                                        00030001
+        PROGRAM-ID.    B24B0619.                                        00040001
+      *================================================================*00050001
+      * FUNCTION.                                                      *00060001
+      *    .....                                                       *00070001
+      *                                                                *00080001
+      * INPUT FILE.                                                    *00090001
+      *    ATMLOG     : ATM LOG FILE                                   *00100001
+      * OUTPUT FILE.                                                   *00110001
+      *    B241D619   :                                                *00120001
+      *    B241A619   : AUDIT LOG                                      *00130001
+      * MAIN LOGIC.                                                    *00140001
+      *    .....                                                       *00150001
+      *                                                                *00160001
+      *================================================================*00170001
+      * CHANGE LOG.                                                    *00180001
+      * DD/MM/YYYY             CHANGE DESCRIPTION             AUTHOR   *00190001
+      * ----------   --------------------------------------  --------- *00200001
+      *                                                                *00210001
+      *================================================================*00220001
+      **********************                                            00230001
+       ENVIRONMENT DIVISION.                                            00240001
+      **********************                                            00250001
+       CONFIGURATION SECTION.                                           00260001
+      *----------------------*                                          00270001
+       SOURCE-COMPUTER. IBM-3083.                                       00280001
+       OBJECT-COMPUTER. IBM-3083.                                       00290001
+      *                                                                 00300001
+      *---------------------*                                           00310001
+       INPUT-OUTPUT SECTION.                                            00320001
+      *---------------------*                                           00330001
+       FILE-CONTROL.                                                    00340001
+           SELECT ATMLOG           ASSIGN TO    ATMLOG                  00350004
+                                   ORGANIZATION INDEXED                 00370005
+                                   ACCESS       SEQUENTIAL              00380003
+                                   RECORD KEY   ATM-LOG-KEY             00380106
+                                   FILE STATUS  ATMLOG-STATUS.          00381003
+           SELECT OPTIONAL TEMPLOG ASSIGN TO    TEMPLOG                 00390032
+                                   ORGANIZATION INDEXED                 00410001
+                                   ACCESS       RANDOM                  00420001
+                                   RECORD KEY   TEMPLOG-KEY             00421003
+                                   FILE STATUS  TEMPLOG-STATUS.         00422003
+           SELECT B241D619         ASSIGN TO    B241D619                00430001
+                                   ORGANIZATION SEQUENTIAL              00450001
+                                   ACCESS       SEQUENTIAL              00460003
+                                   FILE STATUS  B241D619-STATUS.        00461003
+           SELECT B241A619         ASSIGN TO    B241A619.               00470001
+      ***************                                                   00480001
+       DATA DIVISION.                                                   00490001
+      ***************                                                   00500001
+       FILE SECTION.                                                    00510001
+       FD  ATMLOG                                                       00520001
+           RECORD CONTAINS      500  CHARACTERS                         00540001
+           DATA RECORD           IS  ATMLOG-RECORD.                     00550001
+       01  ATMLOG-RECORD.                                               00560001
+       COPY  ATMLOG.                                                    00570001
+      *                                                                 00580001
+       FD  TEMPLOG                                                      00590015
+      *    RECORDING MODE        IS  F                                  00600001
+           RECORD CONTAINS      555  CHARACTERS                         00610014
+           DATA RECORD           IS  TEMPLOG-RECORD.                    00620014
+       01  TEMPLOG-RECORD.                                              00630001
+           05  TEMPLOG-KEY.                                             00640001
+               10  TEMPLOG-RULE      PIC  X(03).                        00650001
+               10  TEMPLOG-TERM-ID   PIC  X(16).                        00660001
+               10  TEMPLOG-CARD-NO   PIC  X(16).                        00670001
+               10  TEMPLOG-AMT1      PIC  9(06)V99.                     00680001
+           05  FILLER                PIC  X(12).                        00690001
+           05  TEMPLOG-DETAIL        PIC  X(500).                       00700001
+      *                                                                 00710001
+       FD  B241D619                                                     00720001
+           RECORDING MODE        IS  F                                  00730001
+           RECORD CONTAINS      100  CHARACTERS                         00740001
+           DATA RECORD           IS  B241D619-RECORD.                   00750001
+       01  B241D619-RECORD.                                             00760001
+           05  1D619-TERM-ID    PIC  X(16).                             00770001
+           05  1D619-TERM-FIID  PIC  X(04).                             00780001
+           05  1D619-CARD-NO    PIC  X(16).                             00790001
+           05  1D619-TXN-DATE   PIC  X(08).                             00800001
+           05  1D619-TXN-TIME   PIC  X(06).                             00810001
+           05  1D619-TXN-CODE   PIC  X(06).                             00820001
+           05  1D619-RESP       PIC  X(02).                             00830001
+           05  1D619-TXN-AMT    PIC  9(06)V99.                          00840001
+           05  1D619-ACCT-BAL   PIC  9(13)V99.                          00850001
+           05  1D619-RULE       PIC  X(03).                             00860032
+           05  1D619-WK-TXNDT   PIC  X(08).                             00861034
+           05  1D619-WK-TXNTM   PIC  X(06).                             00862033
+           05  FILLER           PIC  X(02).                             00870033
+      *                                                                 00880001
+       FD  B241A619                                                     00890001
+           RECORDING MODE        IS  F                                  00900001
+           DATA RECORD           IS  B241A619-RECORD.                   00910001
+       01  B241A619-RECORD      PIC  X(80).                             00920001
+      *                                                                 00930001
+      *-----------------------*                                         00940001
+       WORKING-STORAGE SECTION.                                         00950001
+       COPY AUDITLOG.                                                   00960001
+      *                                                                 00970001
+       01  FILE-CTRL-AREA.                                              00980001
+           05  ATMLOG-STATUS           PIC  9(02)  VALUE  ZEROES.       00990001
+           05  TEMPLOG-STATUS          PIC  9(02)  VALUE  ZEROES.       00991001
+           05  B241D619-STATUS         PIC  9(02)  VALUE  ZEROES.       01000001
+           05  B241A619-STATUS         PIC  9(02)  VALUE  ZEROES.       01010001
+           05  EOF-ATMLOG              PIC  X(01)  VALUE  'N'.          01020001
+      *                                                                 01030001
+       01  COUNT-AREA.                                                  01040001
+           05  COUNT-READ-ATMLOG       PIC  9(06)  VALUE  ZEROES.       01050001
+           05  COUNT-WRITE-RULE1       PIC  9(06)  VALUE  ZEROES.       01060001
+           05  COUNT-WRITE-RULE2       PIC  9(06)  VALUE  ZEROES.       01070001
+           05  COUNT-WRITE-RULE3       PIC  9(06)  VALUE  ZEROES.       01080001
+           05  COUNT-WRITE-RULE4       PIC  9(06)  VALUE  ZEROES.       01090001
+           05  COUNT-WRITE-RULE5       PIC  9(06)  VALUE  ZEROES.       01100001
+           05  COUNT-WRITE-RULE6       PIC  9(06)  VALUE  ZEROES.       01110001
+           05  COUNT-WRITE-RULE7       PIC  9(06)  VALUE  ZEROES.       01120001
+           05  COUNT-R1-COND1          PIC  9(06)  VALUE  ZEROES.       01121011
+           05  COUNT-R2-COND1          PIC  9(06)  VALUE  ZEROES.       01122011
+           05  COUNT-R3-COND1          PIC  9(06)  VALUE  ZEROES.               
+           05  COUNT-R4-COND1          PIC  9(06)  VALUE  ZEROES.               
+           05  COUNT-R5-COND1          PIC  9(06)  VALUE  ZEROES.               
+           05  COUNT-R6-COND1          PIC  9(06)  VALUE  ZEROES.               
+           05  COUNT-R7-COND1          PIC  9(06)  VALUE  ZEROES.               
+      *                                                                 01130001
+       01  MISC-AREA.                                                   01140001
+           05  ERROR-FLAG              PIC  9(01)  VALUE  ZEROES.       01150001
+           05  FOUND-FLAG              PIC  X(01).                      01151001
+           05  WS-FC-RESP1             PIC  9(04).                      01152023
+           05  WS-FC-RESP2             PIC  9(04).                      01153023
+                                                                                
+           05  DIVIDE-FUNC-VAR.                                                 
+               10 DIVIDE-FUNC-A        PIC  9(04).                              
+               10 DIVIDE-FUNC-B        PIC  9(04).                              
+               10 DIVIDE-FUNC-C        PIC  9(04).                              
+                                                                        *       
+       01  WORK-ATMLOG-RECORD.                                          01170001
+           05  WORK-CARD-NO            PIC  X(16).                      01180001
+           05  FILLER                  PIC  X(33).                      01181020
+           05  WORK-TXN-MMDD           PIC  X(04).                      01182001
+           05  WORK-TXN-TIME           PIC  X(06).                      01183001
+           05  FILLER                  PIC  X(441).                     01184020
+                                                                                
+      *                                                                         
+       01  R05-WORK-AREA.                                                       
+           05  R05-WORK-SEQ-COUNT       PIC  9(06) VALUE ZEROES.                
+           05  R05-ATMLOG-STACK  OCCURS 3 TIMES.                                
+               10  R05-ATMLOG-STACK-KEY.                                        
+                   15  R05-ATMLOG-STACK-RULE       PIC  X(03).                  
+                   15  R05-ATMLOG-STACK-ID         PIC  X(16).                  
+                   15  R05-ATMLOG-STACK-CARD-NO    PIC  X(16).                  
+                   15  R05-ATMLOG-STACK-AMT1       PIC  9(06)V99.               
+               10  FILLER                      PIC  X(12).                      
+               10  R05-ATMLOG-STACK-CARD-NO    PIC  X(16).                      
+               10  FILLER                      PIC  X(33).                      
+               10  R05-ATMLOG-STACK-TXN-MMDD   PIC  X(04).                      
+               10  R05-ATMLOG-STACK-TXN-TIME   PIC  X(06).                      
+               10  FILLER                      PIC  X(441).                     
+                                                                                
+                                                                                
+      *                                                                 01190001
+       01  CHECK-TIME-DIFF-AREA.                                        01200001
+           05  CTD-FMT                 PIC  X(14)                       01210001
+                                       VALUE  'YYYYMMDDHHMISS'.         01220001
+           05  CTD-INPUT-AREA.                                          01230036
+               10  CTD-TIME1.                                           01240036
+                   15  CTD-T1-MMDD     PIC  X(04).                      01250036
+                   15  CTD-T1-TIME.                                     01251036
+                       20  CTD-T1-HH   PIC  9(02).                      01260036
+                       20  CTD-T1-MI   PIC  9(02).                      01270036
+                       20  CTD-T1-SS   PIC  9(02).                      01271036
+               10  CTD-TIME2.                                           01280036
+                   15  CTD-T2-MMDD     PIC  X(04).                      01290036
+                   15  CTD-T2-TIME.                                     01300036
+                       20  CTD-T2-HH   PIC  9(02).                      01301037
+                       20  CTD-T2-MI   PIC  9(02).                      01302037
+                       20  CTD-T2-SS   PIC  9(02).                      01303037
+               10  CTD-DURATION        PIC  9(06).                      01304036
+           05  CTD-WORK-AREA.                                           01330001
+               10  CTD-SECOND1         PIC  9(06).                      01340036
+               10  CTD-SECOND2         PIC  9(06).                      01350036
+               10  CTD-TIMEDIFF        PIC  9(06).                      01360036
+               10  CTD-RESULT          PIC  X(01).                      01400001
+      *                                                                 01410001
+      ********************                                              01420001
+       PROCEDURE DIVISION.                                              01430001
+      ********************                                              01440001
+      *================================================================*01450001
+       000-MAIN-ROUTINE  SECTION.                                       01460001
+           PERFORM  100-INITIAL                THRU  100-EXIT.          01470001
+           PERFORM  200-MAIN-LOGIC             THRU  200-EXIT           01480001
+                    UNTIL EOF-ATMLOG = 'Y'.                             01490001
+           PERFORM  300-TERMINATE              THRU  300-EXIT.          01500001
+      *----------*                                                      01510001
+       000-EXIT.                                                        01520001
+           EXIT.                                                        01530001
+      *----------------------------------------------------------------*01540001
+       100-INITIAL  SECTION.                                            01550001
+           MOVE  FUNCTION CURRENT-DATE(1:4)      TO  LOG-DATE-YY.       01560001
+           MOVE  FUNCTION CURRENT-DATE(5:2)      TO  LOG-DATE-MM.       01570001
+           MOVE  FUNCTION CURRENT-DATE(7:2)      TO  LOG-DATE-DD.       01580001
+           MOVE  FUNCTION CURRENT-DATE(9:2)      TO  LOG-TIME-HH.       01590001
+           MOVE  FUNCTION CURRENT-DATE(11:2)     TO  LOG-TIME-MM.       01600001
+           MOVE  FUNCTION CURRENT-DATE(13:2)     TO  LOG-TIME-SS.       01610001
+      *                                                                 01620001
+           OPEN INPUT  ATMLOG                                           01630001
+                I-O    TEMPLOG                                          01640001
+                OUTPUT B241D619                                         01650001
+                       B241A619.                                        01660001
+      *                                                                 01670001
+           IF  ATMLOG-STATUS NOT EQUAL TO ZEROES                        01680001
+               MOVE  'CANNOT OPEN ATMLOG  ==> RETURN CODE'              01690001
+                                                 TO  ERROR-MESSAGE      01700001
+               MOVE  ATMLOG-STATUS               TO  ERROR-STATUS       01710001
+               MOVE  1                           TO  ERROR-FLAG         01720001
+               GO TO 300-TERMINATE                                      01730001
+           END-IF.                                                      01740001
+      *                                                                 01750001
+           IF  TEMPLOG-STATUS NOT EQUAL TO ZEROES                       01751013
+               MOVE  'CANNOT OPEN TEMPLOG ==> RETURN CODE'              01752013
+                                                 TO  ERROR-MESSAGE      01753013
+               MOVE  TEMPLOG-STATUS              TO  ERROR-STATUS       01754013
+               MOVE  1                           TO  ERROR-FLAG         01755013
+               GO TO 300-TERMINATE                                      01756013
+           END-IF.                                                      01757013
+      *                                                                 01758013
+           IF  B241D619-STATUS NOT EQUAL ZEROES                         01760001
+               MOVE  'CANNOT OPEN B241D619 ==> RETURN CODE'             01770001
+                                                 TO  ERROR-MESSAGE      01780001
+               MOVE  B241D619-STATUS             TO  ERROR-STATUS       01790001
+               MOVE  1                           TO  ERROR-FLAG         01800001
+               GO TO 300-TERMINATE                                      01810001
+           END-IF.                                                      01820001
+      *                                                                 01830001
+           PERFORM  310-PRINT-HEAD-AUDIT       THRU  310-EXIT.          01840001
+      *                                                                 01850001
+           PERFORM  900-READ-ATMLOG            THRU  900-EXIT.          01860001
+      *----------*                                                      01870001
+       100-EXIT.                                                        01880001
+           EXIT.                                                        01890001
+      *----------------------------------------------------------------*01900001
+       200-MAIN-LOGIC  SECTION.                                         01910001
+           PERFORM  210-PROCESS-RULE1          THRU  210-EXIT.          01920001
+           PERFORM  220-PROCESS-RULE2          THRU  220-EXIT.          01930001
+      *    PERFORM  230-PROCESS-RULE3          THRU  230-EXIT.          01940001
+      *    PERFORM  240-PROCESS-RULE4          THRU  240-EXIT.          01950001
+           PERFORM  250-PROCESS-RULE5          THRU  250-EXIT.          01960001
+      *    PERFORM  260-PROCESS-RULE6          THRU  260-EXIT.          01970001
+      *    PERFORM  270-PROCESS-RULE7          THRU  270-EXIT.          01980001
+      *                                                                 01990001
+           PERFORM  900-READ-ATMLOG            THRU  900-EXIT.          02000001
+      *----------*                                                      02010001
+       200-EXIT.                                                        02020001
+           EXIT.                                                        02030001
+      *----------------------------------------------------------------*02040001
+       210-PROCESS-RULE1.                                               02050001
+           IF  ATL-TXN-CODE1 IS EQUAL TO  '10' AND                      02060001
+               ATL-AMT-1     IS LESS THAN 1000                          02070001
+               MOVE  'R01'                       TO  TEMPLOG-RULE       02080001
+               MOVE  ATL-TERM-ID                 TO  TEMPLOG-TERM-ID    02090001
+               MOVE  ATL-CARD-NO                 TO  TEMPLOG-CARD-NO    02100001
+               MOVE  999999.99                   TO  TEMPLOG-AMT1       02110001
+               MOVE  ATMLOG-RECORD               TO  TEMPLOG-DETAIL     02120001
+               ADD   1                           TO  COUNT-R1-COND1     02121012
+               WRITE TEMPLOG-RECORD                                     02130001
+                   INVALID KEY                                          02140001
+                       REWRITE TEMPLOG-RECORD                           02150001
+               END-WRITE                                                02160001
+           ELSE                                                         02170001
+               IF  ( ATL-TXN-CODE1   IS EQUAL TO '10' OR                02180001
+                     ATL-TXN-CODE1   IS EQUAL TO '49' OR                02190001
+                     ( ATL-TXN-CODE1 IS EQUAL TO '51' AND               02200001
+                       ATL-TXN-TO    IS EQUAL TO '69' ) ) AND           02210001
+                     ATL-AMT-1 IS GREATER THAN OR EQUAL TO 5000         02220001
+                   MOVE  'R01'                   TO  TEMPLOG-RULE       02230001
+                   MOVE  ATL-TERM-ID             TO  TEMPLOG-TERM-ID    02240001
+                   MOVE  ATL-CARD-NO             TO  TEMPLOG-CARD-NO    02250001
+                   MOVE  999999.99               TO  TEMPLOG-AMT1       02260001
+                   READ  TEMPLOG                                        02270001
+                       INVALID KEY                                      02280001
+                           MOVE  'N'             TO  FOUND-FLAG         02290001
+                       NOT INVALID KEY                                  02300001
+                           MOVE  'Y'             TO  FOUND-FLAG         02310001
+                           INITIALIZE  WORK-ATMLOG-RECORD               02311035
+                           MOVE  TEMPLOG-DETAIL  TO  WORK-ATMLOG-RECORD 02320001
+                   END-READ                                             02330001
+      *                                                                 02340001
+           IF  FOUND-FLAG IS EQUAL TO 'Y'                               02350001
+               INITIALIZE  CTD-INPUT-AREA                               02360001
+               MOVE  WORK-TXN-MMDD               TO  CTD-T1-MMDD        02370036
+               MOVE  WORK-TXN-TIME               TO  CTD-T1-TIME        02380036
+               MOVE  ATL-TXN-MMDD                TO  CTD-T2-MMDD        02390036
+               MOVE  ATL-TXN-TM-RDF              TO  CTD-T2-TIME        02400036
+               MOVE  180                         TO  CTD-DURATION       02410036
+               PERFORM  800-CHECK-TIME-DIFF    THRU  800-EXIT           02420001
+               IF  CTD-RESULT IS EQUAL TO 'Y'                           02430001
+                   MOVE  ATL-TERM-ID             TO  1D619-TERM-ID      02440001
+                   MOVE  ATL-TERM-FIID           TO  1D619-TERM-FIID    02450001
+                   MOVE  ATL-CARD-NO             TO  1D619-CARD-NO      02460001
+                   MOVE  ATL-TXN-DT              TO  1D619-TXN-DATE     02470001
+                   MOVE  ATL-TXN-TM-RDF          TO  1D619-TXN-TIME     02480001
+                   MOVE  ATL-TXN-CODE            TO  1D619-TXN-CODE     02490001
+                   MOVE  ATL-RESP-R              TO  1D619-RESP         02500001
+                   MOVE  ATL-AMT-1               TO  1D619-TXN-AMT      02510001
+                   MOVE  ATL-AMT-2               TO  1D619-ACCT-BAL     02520001
+                   MOVE  'R01'                   TO  1D619-RULE         02530001
+                   MOVE  WORK-TXN-MMDD           TO  1D619-WK-TXNDT     02531033
+                   MOVE  WORK-TXN-TIME           TO  1D619-WK-TXNTM     02532033
+                   WRITE B241D619-RECORD                                02540001
+                   ADD   1                       TO  COUNT-WRITE-RULE1  02550001
+               END-IF                                                   02560001
+           END-IF.                                                      02570001
+      *----------*                                                      02580001
+       210-EXIT.                                                        02590001
+           EXIT.                                                        02600001
+      *----------------------------------------------------------------*02610001
+       220-PROCESS-RULE2.                                               02620001
+           IF  ATL-TXN-CODE1 NOT EQUAL TO '10'                          02630001
+               GO TO 220-EXIT                                           02640001
+           END-IF.                                                      02650001
+      *                                                                 02660001
+           IF  ATL-AMT-1  IS GREATER THAN OR EQUAL TO 20000 AND         02670001
+               ATL-RESP-R NOT EQUAL TO '00' OR '01'                     02680001
+               MOVE  'R02'                       TO  TEMPLOG-RULE       02690001
+               MOVE  ATL-CARD-NO                 TO  TEMPLOG-CARD-NO    02700001
+               MOVE  ATL-TERM-ID                 TO  TEMPLOG-TERM-ID    02710001
+               MOVE  999999.99                   TO  TEMPLOG-AMT1       02720001
+               MOVE  ATMLOG-RECORD               TO  TEMPLOG-DETAIL     02730001
+               ADD    1                          TO  COUNT-R2-COND1     02731012
+               WRITE TEMPLOG-RECORD                                     02740001
+                     INVALID KEY                                        02750001
+                        REWRITE TEMPLOG-RECORD                          02751001
+               END-WRITE                                                02760001
+           ELSE                                                         02770001
+               IF  ATL-AMT-1 IS LESS THAN OR EQUAL TO 15000 AND         02780001
+                   ATL-RESP-R  IS EQUAL TO '00' OR '01'                 02790001
+                   MOVE  'R02'                   TO  TEMPLOG-RULE       02800001
+                   MOVE  ATL-CARD-NO             TO  TEMPLOG-CARD-NO    02810001
+                   MOVE  ATL-TERM-ID             TO  TEMPLOG-TERM-ID    02820001
+                   MOVE  999999.99               TO  TEMPLOG-AMT1       02830001
+                   READ  TEMPLOG                                        02840001
+                       INVALID KEY                                      02850001
+                           MOVE  'N'             TO  FOUND-FLAG         02860001
+                       NOT INVALID KEY                                  02870001
+                           MOVE  'Y'             TO  FOUND-FLAG         02880001
+                           INITIALIZE  WORK-ATMLOG-RECORD               02881035
+                           MOVE  TEMPLOG-DETAIL  TO  WORK-ATMLOG-RECORD 02890001
+                   END-READ                                             02900001
+               END-IF                                                   02910001
+           END-IF.                                                      02920001
+      *                                                                 02930001
+           IF  FOUND-FLAG IS EQUAL TO 'Y'                               02940001
+               INITIALIZE  CTD-INPUT-AREA                               02950001
+               MOVE  WORK-TXN-MMDD               TO  CTD-T1-MMDD        02960036
+               MOVE  WORK-TXN-TIME               TO  CTD-T1-TIME        02970036
+               MOVE  ATL-TXN-MMDD                TO  CTD-T2-MMDD        02980036
+               MOVE  ATL-TXN-TM-RDF              TO  CTD-T2-TIME        02990036
+               MOVE  120                         TO  CTD-DURATION       03000036
+               PERFORM  800-CHECK-TIME-DIFF    THRU  800-EXIT           03010001
+               IF  CTD-RESULT IS EQUAL TO 'Y'                           03020001
+                   MOVE  ATL-TERM-ID             TO  1D619-TERM-ID      03030001
+                   MOVE  ATL-TERM-FIID           TO  1D619-TERM-FIID    03040001
+                   MOVE  ATL-CARD-NO             TO  1D619-CARD-NO      03050001
+                   MOVE  ATL-TXN-DT              TO  1D619-TXN-DATE     03060001
+                   MOVE  ATL-TXN-TM-RDF          TO  1D619-TXN-TIME     03070001
+                   MOVE  ATL-TXN-CODE            TO  1D619-TXN-CODE     03080001
+                   MOVE  ATL-RESP-R              TO  1D619-RESP         03090001
+                   MOVE  ATL-AMT-1               TO  1D619-TXN-AMT      03100001
+                   MOVE  ATL-AMT-2               TO  1D619-ACCT-BAL     03110001
+                   MOVE  'R02'                   TO  1D619-RULE         03120001
+                   MOVE  WORK-TXN-MMDD           TO  1D619-WK-TXNDT     03121033
+                   MOVE  WORK-TXN-TIME           TO  1D619-WK-TXNTM     03122033
+                   WRITE B241D619-RECORD                                03130001
+                   ADD   1                       TO  COUNT-WRITE-RULE2  03140001
+               END-IF                                                   03150001
+           END-IF.                                                      03160001
+      *----------*                                                      03170001
+       220-EXIT.                                                        03180001
+           EXIT.                                                        03190001
+      *---------------------------------------------------------------- *0261000
+       250-PROCESS-RULE5.                                               02620001
+           IF  ATL-TXN-CODE1 NOT EQUAL TO '51'                                  
+               OR ATL-TXN-TO NOT EQUAL TO '69'                                  
+               OR ATL-AMT-1 NOT EQUAL 50000                                     
+               GO TO 250-EXIT                                           02640001
+           END-IF.                                                      02650001
+      *                                                                         
+           INITIALIZE TEMPLOG-RECORD.                                           
+           INITIALIZE R05-WORK-AREA.                                            
+                                                                                
+       250-CHECK-CARD-NO.                                                       
+           IF  ATL-CARD-NO IS NOT EQUAL TO TEMPLOG-CARD-NO                      
+               MOVE 0                            TO  R05-WORK-SEQ-COUNT         
+           ELSE                                                         02770001
+               ADD 1                             TO  R05-WORK-SEQ-COUNT         
+           END-IF.                                                      02920001
+                                                                                
+           MOVE  'R05'                           TO  TEMPLOG-RULE               
+           MOVE  ATL-CARD-NO                     TO  TEMPLOG-CARD-NO            
+           MOVE  ATL-TERM-ID                     TO  TEMPLOG-TERM-ID            
+           MOVE  R05-WORK-SEQ-COUNT              TO  TEMPLOG-AMT1               
+      *    MOVE  999999.99                       TO  TEMPLOG-AMT1               
+                                                                                
+      *FIND STACK LOCATION                                                      
+           INITIALIZE DIVIDE-FUNC-VAR                                           
+           MOVE  R05-WORK-SEQ-COUNT    TO  DIVIDE-FUNC-A                        
+           MOVE  3                     TO  DIVIDE-FUNC-B                        
+           PERFORM  810-DIVIDE-FUNC  THRU  810-EXIT                             
+                                                                                
+           READ TEMPLOG                                                         
+               INVALID KEY                                                      
+                   MOVE  ATMLOG-RECORD             TO  TEMPLOG-DETAIL           
+                   WRITE TEMPLOG-RECORD                                         
+                   MOVE  TEMPLOG-RECORD                                         
+                           TO  R05-ATMLOG-STACK(DIVIDE-FUNC-C)                  
+                   DISPLAY 'W: ' DIVIDE-FUNC-C ':' TEMPLOG-RECORD               
+               NOT INVALID KEY                                                  
+                   MOVE  TEMPLOG-RECORD                                         
+                           TO  R05-ATMLOG-STACK(DIVIDE-FUNC-C)                  
+                   DISPLAY 'R: ' DIVIDE-FUNC-C ':' TEMPLOG-RECORD               
+                   GO TO 250-CHECK-CARD-NO                                      
+           END-READ.                                                            
+                                                                                
+                                                                                
+      *                                                                 02930001
+      *    //TODO                                                       03160001
+      *----------*                                                      03170001
+       250-EXIT.                                                        03180001
+           EXIT.                                                                
+      *----------------------------------------------------------------*03200001
+       300-TERMINATE  SECTION.                                          03210001
+           PERFORM  320-PRINT-AUDIT-LOG        THRU  320-EXIT.          03220001
+      *                                                                 03230001
+           DISPLAY  'R1 COND1 : ' COUNT-R1-COND1.                       03231011
+           DISPLAY  'R2 COND1 : ' COUNT-R2-COND1.                       03232011
+           CLOSE  ATMLOG                                                03240001
+                  TEMPLOG                                               03250001
+                  B241D619                                              03260001
+                  B241A619.                                             03270001
+      *                                                                 03280001
+           STOP RUN.                                                    03290001
+      *----------*                                                      03300001
+       300-EXIT.                                                        03310001
+           EXIT.                                                        03320001
+      *----------------------------------------------------------------*03330001
+       310-PRINT-HEAD-AUDIT.                                            03340001
+           MOVE  'B24B0619'                      TO  PROGRAM-NO.        03350001
+           MOVE  'B241A619'                      TO  REPORT-NO.         03360001
+           WRITE  B241A619-RECORD  FROM  LOG-HEAD-1  AFTER  PAGE.       03370001
+           WRITE  B241A619-RECORD  FROM  LOG-HEAD-2  AFTER  1.          03380001
+           WRITE  B241A619-RECORD  FROM  LOG-HEAD-3  AFTER  1.          03390001
+           MOVE  ALL '-'                         TO  B241A619-RECORD.   03400001
+           WRITE  B241A619-RECORD                    AFTER  1.          03410001
+      *----------*                                                      03420001
+       310-EXIT.                                                        03430001
+           EXIT.                                                        03440001
+      *----------------------------------------------------------------*03450001
+       320-PRINT-AUDIT-LOG.                                             03460001
+           IF  ERROR-FLAG NOT EQUAL TO ZEROES                           03470001
+               MOVE  '** ABNORMAL END PROGRAM B24B0619 ***'             03480001
+                                                 TO  LOG-MESS1          03490001
+               WRITE B241A619-RECORD  FROM  ERROR-FILE-LINE  AFTER 2    03500001
+           ELSE                                                         03510001
+               MOVE  '***  NORMAL END PROGRAM B24B0619 ***'             03520001
+                                                 TO  LOG-MESS1          03530001
+               WRITE B241A619-RECORD  FROM  LOG-MESSAGE      AFTER 2    03540001
+           END-IF.                                                      03550001
+      *                                                                 03560001
+           MOVE  '     TOTAL READ ATMLOG                  = '           03570001
+                                                 TO  LOG-MESS.          03580001
+           MOVE  COUNT-READ-ATMLOG               TO  LOG-COUNT.         03590001
+           MOVE  'RECORDS'                       TO  LOG-MESS2.         03600001
+           WRITE  B241A619-RECORD  FROM  LOG-WRITE     AFTER  1.        03610001
+      *                                                                 03620001
+           MOVE  '     TOTAL WRITE RULE #1                = '           03630001
+                                                 TO  LOG-MESS.          03640001
+           MOVE  COUNT-WRITE-RULE1               TO  LOG-COUNT.         03650001
+           MOVE  'RECORDS'                       TO  LOG-MESS2.         03660001
+           WRITE  B241A619-RECORD  FROM  LOG-WRITE     AFTER  1.        03670001
+      *                                                                 03680001
+           MOVE  '     TOTAL WRITE RULE #2                = '           03690001
+                                                 TO  LOG-MESS.          03700001
+           MOVE  COUNT-WRITE-RULE2               TO  LOG-COUNT.         03710001
+           MOVE  'RECORDS'                       TO  LOG-MESS2.         03720001
+           WRITE  B241A619-RECORD  FROM  LOG-WRITE     AFTER  1.        03730001
+      *                                                                 03740001
+           MOVE  '     TOTAL WRITE RULE #3                = '           03750001
+                                                 TO  LOG-MESS.          03760001
+           MOVE  COUNT-WRITE-RULE3               TO  LOG-COUNT.         03770001
+           MOVE  'RECORDS'                       TO  LOG-MESS2.         03780001
+           WRITE  B241A619-RECORD  FROM  LOG-WRITE     AFTER  1.        03790001
+      *                                                                 03800001
+           MOVE  '     TOTAL WRITE RULE #4                = '           03810001
+                                                 TO  LOG-MESS.          03820001
+           MOVE  COUNT-WRITE-RULE4               TO  LOG-COUNT.         03830001
+           MOVE  'RECORDS'                       TO  LOG-MESS2.         03840001
+           WRITE  B241A619-RECORD  FROM  LOG-WRITE     AFTER  1.        03850001
+      *                                                                 03860001
+           MOVE  '     TOTAL WRITE RULE #5                = '           03870001
+                                                 TO  LOG-MESS.          03880001
+           MOVE  COUNT-WRITE-RULE5               TO  LOG-COUNT.         03890001
+           MOVE  'RECORDS'                       TO  LOG-MESS2.         03900001
+           WRITE  B241A619-RECORD  FROM  LOG-WRITE     AFTER  1.        03910001
+      *                                                                 03920001
+           MOVE  '     TOTAL WRITE RULE #6                = '           03930001
+                                                 TO  LOG-MESS.          03940001
+           MOVE  COUNT-WRITE-RULE6               TO  LOG-COUNT.         03950001
+           MOVE  'RECORDS'                       TO  LOG-MESS2.         03960001
+           WRITE  B241A619-RECORD  FROM  LOG-WRITE     AFTER  1.        03970001
+      *                                                                 03980001
+           MOVE  '     TOTAL WRITE RULE #7                = '           03990001
+                                                 TO  LOG-MESS.          04000001
+           MOVE  COUNT-WRITE-RULE7               TO  LOG-COUNT.         04010001
+           MOVE  'RECORDS'                       TO  LOG-MESS2.         04020001
+           WRITE  B241A619-RECORD  FROM  LOG-WRITE     AFTER  1.        04030001
+      *                                                                 04040001
+           MOVE  ALL  '-'                        TO  B241A619-RECORD.   04050001
+           WRITE  B241A619-RECORD                      AFTER  2.        04060001
+      *----------*                                                      04070001
+       320-EXIT.                                                        04080001
+           EXIT.                                                        04090001
+      *----------------------------------------------------------------*04100001
+       800-CHECK-TIME-DIFF  SECTION.                                    04110001
+           INITIALIZE  CTD-WORK-AREA.                                   04110136
+           COMPUTE CTD-SECOND1 =   CTD-T1-SS + ( CTD-T1-MI * 60 ) +     04111036
+                                          ( CTD-T1-HH * 24 * 60 )       04112036
+           IF  CTD-T1-MMDD IS EQUAL TO CTD-T2-MMDD                      04113038
+               COMPUTE CTD-SECOND2 =   CTD-T2-SS + ( CTD-T2-MI * 60 ) + 04114036
+                                              ( CTD-T2-HH * 24 * 60 )   04115036
+           ELSE                                                         04116036
+               COMPUTE CTD-SECOND2 =   CTD-T2-SS + ( CTD-T2-MI * 60 ) + 04117036
+                                     ( ( 24 + CTD-T2-HH ) * 24 * 60 )   04118036
+           END-IF.                                                      04119036
+                                                                        04119136
+           COMPUTE  CTD-TIMEDIFF = CTD-SECOND2 - CTD-SECOND1.           04119236
+                                                                        04119436
+           IF  CTD-TIMEDIFF IS LESS THAN OR EQUAL TO  CTD-DURATION      04119536
+               MOVE  'Y'                         TO  CTD-RESULT         04119636
+               DISPLAY  'RESULT IS Y FOR...'                            04119739
+               DISPLAY  '  DURATION     : '  CTD-DURATION               04119839
+               DISPLAY  '  TRAN TIME 2  : '  CTD-T2-TIME                04119939
+               DISPLAY  '  TRAN TIME 1  : '  CTD-T1-TIME                04120039
+           ELSE                                                         04120139
+               MOVE  'N'                         TO  CTD-RESULT         04120239
+           END-IF.                                                      04120339
+      *    INITIALIZE  CTD-WORK-AREA.                                   04120439
+      *    INITIALIZE  WS-FC-RESP1  WS-FC-RESP2.                        04120539
+      *    CALL  'CEESECS'  USING  CTD-TMSTP1 CTD-FMT CTD-SEC1 CTD-FC1. 04130036
+      *    IF  CTD-FC1-RESP1  NOT EQUAL TO +0                           04140036
+      *        INITIALIZE  WS-FC-RESP1  WS-FC-RESP2                     04140136
+      *        MOVE  CTD-FC1-RESP1               TO  WS-FC-RESP1        04141036
+      *        MOVE  CTD-FC1-RESP2               TO  WS-FC-RESP2        04142036
+      *        DISPLAY  'TMSTP1 CEESECS FAIL'                           04150036
+      *        DISPLAY ' TEMPLOG : '  TEMPLOG-KEY                       04150136
+      *        DISPLAY '  TMSTP1 : '  CTD-TMSTP1                        04150236
+      *        DISPLAY '     FMT : '  CTD-FMT                           04150336
+      *        DISPLAY  '    FC1 : '  WS-FC-RESP1                       04151036
+      *        DISPLAY  '    FC2 : '  WS-FC-RESP2                       04152036
+      *        DISPLAY  '   SEC1 : '  CTD-SEC1                          04153036
+      *        GO TO  800-EXIT                                          04160036
+      *    END-IF.                                                      04170036
+      *                                                                 04180001
+      *    INITIALIZE  WS-FC-RESP1  WS-FC-RESP2.                        04180136
+      *    CALL  'CEESECS'  USING  CTD-TMSTP2 CTD-FMT CTD-SEC2 CTD-FC2. 04180236
+      *    IF  CTD-FC2-RESP1  NOT EQUAL TO +0                           04200036
+      *        MOVE  CTD-FC2-RESP1               TO  WS-FC-RESP1        04202036
+      *        MOVE  CTD-FC2-RESP2               TO  WS-FC-RESP2        04203036
+      *        DISPLAY  'TMSTP2 CEESECS FAIL'                           04204036
+      *        DISPLAY '  ATMLOG : '  ATM-LOG-KEY                       04204136
+      *        DISPLAY '  TMSTP2 : '  CTD-TMSTP2                        04205036
+      *        DISPLAY '     FMT : '  CTD-FMT                           04206036
+      *        DISPLAY  '    FC1 : '  WS-FC-RESP1                       04207036
+      *        DISPLAY  '    FC2 : '  WS-FC-RESP2                       04208036
+      *        DISPLAY  '   SEC2 : ' CTD-SEC2                           04211236
+      *        GO TO  800-EXIT                                          04211336
+      *    END-IF.                                                      04220036
+      *                                                                 04230001
+      *    SUBTRACT  CTD-SEC1  FROM  CTD-SEC2  GIVING  CTD-DIFF.        04240036
+      *    IF  CTD-DIFF  IS LESS THAN OR EQUAL TO  CTD-DURATION         04250036
+      *        MOVE  'Y'                         TO  CTD-RESULT         04260036
+      *    ELSE                                                         04270036
+      *        MOVE  'N'                         TO  CTD-RESULT         04280036
+      *    END-IF.                                                      04290036
+      *----------*                                                      04300001
+       800-EXIT.                                                        04310001
+           EXIT.                                                        04320001
+      *----------------------------------------------------------------*        
+       810-DIVIDE-FUNC.                                                         
+           DIVIDE DIVIDE-FUNC-A BY DIVIDE-FUNC-B                                
+           GIVING DIVIDE-FUNC-C REMAINDER DIVIDE-FUNC-C.                        
+       810-EXIT.                                                                
+           EXIT.                                                                
+                                                                                
+      *----------------------------------------------------------------*04330001
+       900-READ-ATMLOG  SECTION.                                        04340001
+           READ  ATMLOG                                                 04350001
+               AT END                                                   04360001
+               MOVE  'Y'                         TO  EOF-ATMLOG         04370001
+               GO TO  900-EXIT.                                         04380001
+      *                                                                 04390001
+           IF ATMLOG-STATUS NOT EQUAL TO ZEROES                         04400001
+               MOVE  'ABNORMAL READ ATMLOG => FILE STATUS = '           04410001
+                                                 TO  ERROR-MESSAGE      04420001
+               MOVE  ATMLOG-STATUS               TO  ERROR-STATUS       04430001
+               MOVE  1                           TO  ERROR-FLAG         04440001
+               GO TO  300-TERMINATE                                     04450001
+           END-IF.                                                      04460001
+      *                                                                 04470001
+           ADD   1                               TO  COUNT-READ-ATMLOG. 04480001
+      *----------*                                                      04490001
+       900-EXIT.                                                        04500001
+           EXIT.                                                        04510001
+      *================================================================*04520001
+       END PROGRAM  B24B0619.                                           04530001
+      *================================================================*04540001
