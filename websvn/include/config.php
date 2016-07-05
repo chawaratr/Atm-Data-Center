@@ -86,6 +86,8 @@
 //
 $config->addRepository('001_ATM', 'http://a10110hg.kasikornbank.com:8080/svn/Base_Line_Documents', null, 'atm01', 'atm01');
 $config->addRepository('676_Prognosis', 'http://a10110hg.kasikornbank.com:8080/svn/676_Prognosis', null, 'atm01', 'atm01');
+$config->addRepository('221_ATM_PC', 'http://a10110hg.kasikornbank.com:8080/svn/221_ATM_PC', null, 'atm01', 'atm01');
+
 // $config->addRepository('NameToDisplay', 'URL (e.g. http://path/to/rep)', null, 'username', 'password');
 // $config->addRepository('NameToDisplay', 'URL (e.g. http://path/to/rep)', 'group', 'username', 'password');
 //
